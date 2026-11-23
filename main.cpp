@@ -1,5 +1,6 @@
 #include <ncurses/curses.h>
 #include "./head/menu.h"
+#include "./head/game.h"
 
 int main() {
     initscr();
@@ -13,16 +14,30 @@ int main() {
     while (running) {
         int pilihan = menu.menu();
 
-        if (pilihan == 4) { // QUIT
-            running = false;
-        } else {
-            clear();
-            attron(COLOR_PAIR(2) | A_BOLD);
-            mvprintw(12, 8, "Fitur ini masih dalam pengerjaan");
-            attroff(COLOR_PAIR(2) | A_BOLD);
-            refresh();
-            napms(900);
-            flushinp();
+        switch (pilihan) {
+            case 0: { // PLAY
+                clear();
+                refresh();
+                flushinp();
+                Game start_game;
+                start_game.game();
+                break;
+            }
+            case 4: { // QUIT
+                running = false;
+                break;
+            }
+            default: {
+                // Opsi lain belum ada isinya
+                clear();
+                attron(COLOR_PAIR(2) | A_BOLD);
+                mvprintw(12, 8, "Fitur ini masih dalam pengerjaan, sabar ya...");
+                attroff(COLOR_PAIR(2) | A_BOLD);
+                refresh();
+                napms(900);
+                flushinp();
+                break;
+            }
         }
     }
 

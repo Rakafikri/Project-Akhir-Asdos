@@ -1,5 +1,5 @@
 @echo off
-g++ main.cpp menu.cpp -o program.exe -std=c++17 -lncurses -DNCURSES_STATIC
+g++ main.cpp menu.cpp game.cpp -o program.exe -std=c++17 -lncurses -DNCURSES_STATIC
 if %errorlevel% == 0 (
     echo Build sukses!
     program.exe
