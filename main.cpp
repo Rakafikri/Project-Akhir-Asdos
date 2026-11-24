@@ -1,9 +1,14 @@
 #include <ncurses/curses.h>
+#include <ctime>
+#include <cstdlib>
 #include "./head/menu.h"
 #include "./head/game.h"
 
 int main() {
+    srand((unsigned)time(0));
+
     initscr();
+    keypad(stdscr, TRUE);
     curs_set(0);
     noecho();
 

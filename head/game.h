@@ -17,6 +17,15 @@ private:
     int  countEmpty();
     int  getMaxTile();
 
+    // Gerakan
+    void transpose();
+    void reverseRows();
+    bool slideLeft();
+    bool slideRight();
+    bool slideUp();
+    bool slideDown();
+    bool move(int dir);
+
     // Rendering
     int  getColorPair(int value);
     void drawCell(int row, int col, int cy, int cx, int cell_w, int cell_h);
