@@ -18,13 +18,11 @@ private:
     int  getMaxTile();
 
     // Gerakan
-    void transpose();
-    void reverseRows();
-    bool slideLeft();
-    bool slideRight();
-    bool slideUp();
-    bool slideDown();
-    bool move(int dir);
+    bool slideRowLeft(int row[SIZE]);
+    bool moveLeft();
+    bool moveRight();
+    bool moveUp();
+    bool moveDown();
 
     // Rendering
     int  getColorPair(int value);

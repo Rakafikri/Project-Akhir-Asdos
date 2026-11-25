@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
-#include <utility>
 #include "./head/game.h"
 using namespace std;
 
@@ -76,91 +75,89 @@ void Game::addRandomTile() {
 
 // ============ GERAKAN TILE ============
 
-void Game::transpose() {
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = i + 1; j < SIZE; j++) {
-            std::swap(board[i][j], board[j][i]);
+// Jujurly diriku kurang yakin, but somehow its works!:)
+bool Game::slideRowLeft(int row[SIZE]) {
+    bool moved = false;
+    int temp[SIZE] = {0};
+    int pos = 0;
+
+    for (int i = 0; i < SIZE; i++)
+        if (row[i] != 0) temp[pos++] = row[i];
+
+    for (int i = 0; i < SIZE - 1; i++) {
+        if (temp[i] != 0 && temp[i] == temp[i + 1]) {
+            temp[i] *= 2;
+            score += temp[i];
+            temp[i + 1] = 0;
         }
     }
+
+    int result[SIZE] = {0};
+    pos = 0;
+    for (int i = 0; i < SIZE; i++)
+        if (temp[i] != 0) result[pos++] = temp[i];
+
+    for (int i = 0; i < SIZE; i++) {
+        if (row[i] != result[i]) moved = true;
+        row[i] = result[i];
+    }
+    return moved;
 }
 
-void Game::reverseRows() {
+bool Game::moveLeft() {
+    bool moved = false;
+    for (int i = 0; i < SIZE; i++)
+        if (slideRowLeft(board[i])) moved = true;
+    return moved;
+}
+
+bool Game::moveRight() {
+    bool moved = false;
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE / 2; j++) {
-            std::swap(board[i][j], board[i][SIZE - 1 - j]);
+            int tmp = board[i][j];
+            board[i][j] = board[i][SIZE - 1 - j];
+            board[i][SIZE - 1 - j] = tmp;
         }
-    }
-}
-
-bool Game::slideLeft() {
-    bool moved = false;
-    for (int i = 0; i < SIZE; i++) {
-        // 1) Kompresi: buang nol
-        int temp[SIZE] = {0};
-        int idx = 0;
-        for (int j = 0; j < SIZE; j++) {
-            if (board[i][j] != 0) {
-                temp[idx++] = board[i][j];
-            }
-        }
-
-        // 2) Gabungkan tile yang nilainya sama
-        for (int j = 0; j < SIZE - 1; j++) {
-            if (temp[j] != 0 && temp[j] == temp[j + 1]) {
-                temp[j] *= 2;
-                score += temp[j];
-                temp[j + 1] = 0;
-            }
-        }
-
-        // 3) Tulis balik ke board
-        for (int j = 0; j < SIZE; j++) {
-            if (board[i][j] != temp[j]) moved = true;
-            board[i][j] = temp[j];
+        if (slideRowLeft(board[i])) moved = true;
+        for (int j = 0; j < SIZE / 2; j++) {
+            int tmp = board[i][j];
+            board[i][j] = board[i][SIZE - 1 - j];
+            board[i][SIZE - 1 - j] = tmp;
         }
     }
     return moved;
 }
 
-bool Game::slideRight() {
-    reverseRows();
-    bool moved = slideLeft();
-    reverseRows();
-    return moved;
-}
-
-bool Game::slideUp() {
-    transpose();
-    bool moved = slideLeft();
-    transpose();
-    return moved;
-}
-
-bool Game::slideDown() {
-    transpose();
-    reverseRows();
-    bool moved = slideLeft();
-    reverseRows();
-    transpose();
-    return moved;
-}
-
-bool Game::move(int dir) {
+bool Game::moveUp() {
     bool moved = false;
-    if (dir == 0) moved = slideUp();
-    else if (dir == 1) moved = slideRight();
-    else if (dir == 2) moved = slideDown();
-    else if (dir == 3) moved = slideLeft();
+    for (int j = 0; j < SIZE; j++) {
+        int col[SIZE];
+        for (int i = 0; i < SIZE; i++) col[i] = board[i][j];
+        if (slideRowLeft(col)) moved = true;
+        for (int i = 0; i < SIZE; i++) board[i][j] = col[i];
+    }
     return moved;
 }
 
-// ============ RENDERING (UKURAN GRID 4x4 KOTAK SQUARE) ============
+bool Game::moveDown() {
+    bool moved = false;
+    for (int j = 0; j < SIZE; j++) {
+        int col[SIZE];
+        for (int i = 0; i < SIZE; i++) col[i] = board[SIZE - 1 - i][j];
+        if (slideRowLeft(col)) moved = true;
+        for (int i = 0; i < SIZE; i++) board[SIZE - 1 - i][j] = col[i];
+    }
+    return moved;
+}
+
+// ============ RENDERING ============
 
 void Game::drawCell(int row, int col, int cy, int cx, int cell_w, int cell_h) {
     int value = board[row][col];
     int color = getColorPair(value);
 
-    // Aktifkan warna dan cetak tebal (A_BOLD) untuk warna mencolok & kontras tinggi
+    // Aktifkan warna dan cetak tebal (A_BOLD)
     attron(COLOR_PAIR(color) | A_BOLD);
 
     // Warnai penuh seluruh area kotak (cell_w karakter x cell_h baris)
@@ -287,13 +284,14 @@ void Game::game() {
         int ch = getch();
 
         bool moved = false;
-        if (ch == KEY_UP || ch == 'w' || ch == 'W') moved = move(0);
-        else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') moved = move(1);
-        else if (ch == KEY_DOWN || ch == 's' || ch == 'S') moved = move(2);
-        else if (ch == KEY_LEFT || ch == 'a' || ch == 'A') moved = move(3);
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') moved = moveUp();
+        else if (ch == KEY_RIGHT || ch == 'd' || ch == 'D') moved = moveRight();
+        else if (ch == KEY_DOWN || ch == 's' || ch == 'S') moved = moveDown();
+        else if (ch == KEY_LEFT || ch == 'a' || ch == 'A') moved = moveLeft();
         else if (ch == 'q' || ch == 'Q') break;
 
         if (moved) {
+            move_count++;
             addRandomTile();
         }
     }

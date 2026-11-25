@@ -1,145 +1,147 @@
 #include <ncurses/curses.h>
+#include <cstring>
+#include <string>
 #include "./head/menu.h"
 using namespace std;
 
-void MENU::initGame(){
-    setlocale(LC_ALL, "");
+// Di deklarasi func nya kaga pake parameter ngapain dipanggil pake parameter?
+void MENU::initGame() {
+    initscr();
+    cbreak();
+    noecho();
+    curs_set(0);
+    keypad(stdscr, TRUE);
 
-    if(has_colors()){
-        start_color();
-        use_default_colors();
+    start_color();
+    init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_BLUE);
+    init_pair(4, COLOR_WHITE, COLOR_BLACK);
+    init_pair(5, COLOR_GREEN, COLOR_BLACK);
+    init_pair(6, COLOR_RED, COLOR_BLACK);
 
-        init_pair(1, COLOR_CYAN, -1);    // Judul
-        init_pair(2, COLOR_WHITE, -1);   // Teks Normal
-        init_pair(3, COLOR_BLACK, COLOR_CYAN); // Highlight Menu
-        init_pair(4, COLOR_YELLOW, -1);  // Border
-        init_pair(5, COLOR_GREEN, -1);   // High Score
-        init_pair(6, COLOR_RED, -1);     // Quit / Warning
-
-        // Warna tile 2048
-        init_pair(10, 8, -1);   // 0: Kosong
-        init_pair(11, 250, -1); // 2
-        init_pair(12, 255, -1); // 4
-        init_pair(13, 222, -1); // 8
-        init_pair(14, 214, -1); // 16
-        init_pair(15, 208, -1); // 32
-        init_pair(16, 196, -1); // 64
-        init_pair(17, 228, -1); // 128
-        init_pair(18, 226, -1); // 256
-        init_pair(19, 220, -1); // 512
-        init_pair(20, 48, -1);  // 1024
-        init_pair(21, 46, -1);  // 2048
-        init_pair(22, 201, -1); // 4096+
-    }
+    // Color pairs untuk tile 2048 pake 8 warna standar biar aman di semua terminal
+    init_pair(10, COLOR_WHITE, COLOR_BLACK);   // Kosong
+    init_pair(11, COLOR_BLACK, COLOR_WHITE);   // 2: Putih
+    init_pair(12, COLOR_BLACK, COLOR_CYAN);    // 4: Cyan
+    init_pair(13, COLOR_WHITE, COLOR_BLUE);    // 8: Biru
+    init_pair(14, COLOR_WHITE, COLOR_RED);     // 16: Merah
+    init_pair(15, COLOR_WHITE, COLOR_MAGENTA); // 32: Magenta (Ungu)
+    init_pair(16, COLOR_BLACK, COLOR_YELLOW);  // 64: Kuning Emas
+    init_pair(17, COLOR_WHITE, COLOR_GREEN);   // 128: Hijau Emerald
+    init_pair(18, COLOR_BLACK, COLOR_WHITE);   // 256: Putih Tebal
+    init_pair(19, COLOR_YELLOW, COLOR_MAGENTA);// 512: Magenta teks Emas
+    init_pair(20, COLOR_YELLOW, COLOR_BLUE);   // 1024: Biru teks Emas
+    init_pair(21, COLOR_YELLOW, COLOR_RED);    // 2048: Merah Membara teks Emas
+    init_pair(22, COLOR_WHITE, COLOR_GREEN);   // >2048: Hijau Terang
 }
 
-void MENU::tampilanJudul(int start_y, int start_x) {
+// Judul Game 2048 di tengah layar
+void MENU::tampilanJudul() {
+    int max_x = getmaxx(stdscr);
+    int cx = (max_x > 32) ? (max_x - 32) / 2 : 5;
+    int awalX = 4;
+
     attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(start_y, start_x, "  .d8888b.   .d8888b.      d8888   .d8888b.  ");
-    mvprintw(start_y + 1, start_x, " d88P  Y88b d88P  Y88b    d8P888  d88P  Y88b ");
-    mvprintw(start_y + 2, start_x, "        888 888    888   d8P 888  Y88b. d88P ");
-    mvprintw(start_y + 3, start_x, "      .d88P 888    888  d8P  888   \"Y88888\"  ");
-    mvprintw(start_y + 4, start_x, "  .od888P\"  888    888 d88   888  .d8P\"\"Y8b. ");
-    mvprintw(start_y + 5, start_x, " d88P\"      888    888 8888888888 888    888 ");
-    mvprintw(start_y + 6, start_x, " 888\"       Y88b  d88P       888  Y88b  d88P ");
-    mvprintw(start_y + 7, start_x, " 888888888   \"Y8888P\"        888   \"Y8888P\"  ");
+    // ASCII Art nya lebih keren gini apa yang kemaren? :3
+    mvprintw(awalX,     cx, "    ____    ___   _  _    ___  ");
+    mvprintw(awalX + 1, cx, "   |___ \\  / _ \\ | || |  ( _ ) ");
+    mvprintw(awalX + 2, cx, "     __) || | | || || |_ / _ \\ ");
+    mvprintw(awalX + 3, cx, "    / __/ | |_| ||__   _| (_) |");
+    mvprintw(awalX + 4, cx, "   |_____| \\___/    |_|  \\___/ ");
     attroff(COLOR_PAIR(1) | A_BOLD);
 
-    attron(COLOR_PAIR(4));
-    mvprintw(start_y + 9, start_x + 8, "~*~ THE ALCHEMY 4x4 ~*~");
-    attroff(COLOR_PAIR(4));
+    attron(COLOR_PAIR(2) | A_BOLD);
+    const char* sub = "~*~ THE ALCHEMY 4x4 ~*~";
+    int sub_len = (int)strlen(sub);
+    mvprintw(awalX + 6, (max_x > sub_len) ? (max_x - sub_len) / 2 : 5, "%s", sub);
+    attroff(COLOR_PAIR(2) | A_BOLD);
 }
 
-void MENU::tampilanMenu(int highlight) {
-    const char *opsi[] = {
-        "PLAY GAME",
-        "CONTINUE",
-        "STORY",
-        "HIGH SCORE",
-        "QUIT"
-    };
+// Menu Navigasi (5 Opsi) - Ditengahkan Secara Simetris
+void MENU::tampilanMenu(int pilihan) {
+    int max_x = getmaxx(stdscr);
+    short int box_w = 34;
+    short int kolom_kiriAtas = (max_x > box_w) ? (max_x - box_w) / 2 : 23;
+    short int baris_kiriAtas = 12;
+    short int kolom_kananBawah = kolom_kiriAtas + box_w;
+    short int baris_kananBawah = baris_kiriAtas + 12;
+    short int kolom, baris;
 
-    int jumlah_opsi = 5;
+    // Bingkai Box Menu
+    attron(COLOR_PAIR(1));
+    mvaddch(baris_kiriAtas, kolom_kiriAtas, ACS_ULCORNER);
+    for (kolom = kolom_kiriAtas + 1; kolom < kolom_kananBawah; kolom++) mvaddch(baris_kiriAtas, kolom, ACS_HLINE);
+    mvaddch(baris_kiriAtas, kolom_kananBawah, ACS_URCORNER);
 
-    int max_y, max_x;
-    getmaxyx(stdscr, max_y, max_x);
-
-    int box_width = 34;
-    int box_height = 9;
-    int box_x = (max_x - box_width) / 2;
-    int box_y = 15;
-
-    // Tampilkan Judul
-    int judul_x = (max_x - 44) / 2;
-    tampilanJudul(2, judul_x);
-
-    // Gambar Kotak Luar Menu
-    attron(COLOR_PAIR(2));
-    for(int i = 0; i < box_height; i++) {
-        for(int j = 0; j < box_width; j++) {
-            if(i == 0 && j == 0) mvaddch(box_y + i, box_x + j, ACS_ULCORNER);
-            else if(i == 0 && j == box_width - 1) mvaddch(box_y + i, box_x + j, ACS_URCORNER);
-            else if(i == box_height - 1 && j == 0) mvaddch(box_y + i, box_x + j, ACS_LLCORNER);
-            else if(i == box_height - 1 && j == box_width - 1) mvaddch(box_y + i, box_x + j, ACS_LRCORNER);
-            else if(i == 0 || i == box_height - 1) mvaddch(box_y + i, box_x + j, ACS_HLINE);
-            else if(j == 0 || j == box_width - 1) mvaddch(box_y + i, box_x + j, ACS_VLINE);
-        }
+    for (baris = baris_kiriAtas + 1; baris < baris_kananBawah; baris++) {
+        mvaddch(baris, kolom_kiriAtas, ACS_VLINE);
+        mvaddch(baris, kolom_kananBawah, ACS_VLINE);
     }
-    attroff(COLOR_PAIR(2));
 
-    // Opsi di dalam kotak
-    for(int i = 0; i < jumlah_opsi; i++) {
-        int text_x = box_x + (box_width - 20) / 2;
-        int text_y = box_y + 2 + i;
+    mvaddch(baris_kananBawah, kolom_kananBawah, ACS_LRCORNER);
+    for (kolom = kolom_kananBawah - 1; kolom > kolom_kiriAtas; kolom--) mvaddch(baris_kananBawah, kolom, ACS_HLINE);
+    mvaddch(baris_kananBawah, kolom_kiriAtas, ACS_LLCORNER);
+    attroff(COLOR_PAIR(1));
 
-        if(highlight == i) {
+    const char* menuOpsi[5];
+    menuOpsi[0] = "PLAY";
+    menuOpsi[1] = "CONTINUE";
+    menuOpsi[2] = "STORY";
+    menuOpsi[3] = "HIGH SCORE";
+    menuOpsi[4] = "QUIT";
+
+    for (int i = 0; i < 5; i++) {
+        int baris_teks = baris_kiriAtas + 1 + i * 2;
+        int panjang_opsi = (int)string(menuOpsi[i]).length();
+        int offset_x = (box_w - panjang_opsi) / 2;
+
+        if (pilihan == i) {
             attron(COLOR_PAIR(3) | A_BOLD);
-            mvprintw(text_y, text_x, " -> % -13s ", opsi[i]);
+            mvprintw(baris_teks, kolom_kiriAtas + 1, "                                ");
+            mvprintw(baris_teks, kolom_kiriAtas + offset_x - 2, "> %s <", menuOpsi[i]);
             attroff(COLOR_PAIR(3) | A_BOLD);
         } else {
-            attron(COLOR_PAIR(2));
-            mvprintw(text_y, text_x, "    % -13s ", opsi[i]);
-            attroff(COLOR_PAIR(2));
+            attron(COLOR_PAIR(4));
+            mvprintw(baris_teks, kolom_kiriAtas + 1, "                                ");
+            mvprintw(baris_teks, kolom_kiriAtas + offset_x, "%s", menuOpsi[i]);
+            attroff(COLOR_PAIR(4));
         }
     }
 
-    // Hint
+    // Hint buat tombol navigasi
     attron(A_DIM);
-    mvprintw(box_y + box_height + 2, (max_x - 42) / 2, "Gunakan [Panah Atas/Bawah] dan [ENTER]");
+    const char* hint = "Gunakan Panah / WASD  |  Enter: Pilih";
+    int hint_x = (max_x > 36) ? (max_x - 36) / 2 : 22;
+    mvprintw(baris_kananBawah + 1, hint_x, "%s", hint);
     attroff(A_DIM);
 }
 
+// Loop Utama Menu
 int MENU::menu() {
-    int highlight = 0;
-    int pilihan = -1;
-    int input;
+    nodelay(stdscr, FALSE);
 
-    while(1) {
+    int pilihan = 0;
+    int ch;
+
+    while (true) {
         clear();
-        tampilanMenu(highlight);
+        tampilanJudul();
+        tampilanMenu(pilihan);
         refresh();
 
-        input = getch();
-
-        switch(input) {
-            case KEY_UP:
-            case 'w':
-            case 'W':
-                highlight = (highlight == 0) ? 4 : highlight - 1;
-                break;
-            case KEY_DOWN:
-            case 's':
-            case 'S':
-                highlight = (highlight == 4) ? 0 : highlight + 1;
-                break;
-            case 10:
-            case '\n':
-            case '\r':
-            case KEY_ENTER:
-                pilihan = highlight;
-                return pilihan;
-            default:
-                break;
+        ch = getch();
+        if (ch == KEY_UP || ch == 'w' || ch == 'W') {
+            pilihan--;
+            if (pilihan < 0) pilihan = 4;
+        }
+        else if (ch == KEY_DOWN || ch == 's' || ch == 'S') {
+            pilihan++;
+            if (pilihan > 4) pilihan = 0;
+        }
+        else if (ch == 10 || ch == 13 || ch == KEY_ENTER || ch == '\n' || ch == '\r') {
+            flushinp();
+            return pilihan;
         }
     }
 }
