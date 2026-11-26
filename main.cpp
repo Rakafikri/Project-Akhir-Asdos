@@ -1,14 +1,9 @@
 #include <ncurses/curses.h>
-#include <ctime>
-#include <cstdlib>
 #include "./head/menu.h"
 #include "./head/game.h"
 
 int main() {
-    srand((unsigned)time(0));
-
     initscr();
-    keypad(stdscr, TRUE);
     curs_set(0);
     noecho();
 
@@ -20,7 +15,7 @@ int main() {
         int pilihan = menu.menu();
 
         switch (pilihan) {
-            case 0: { // PLAY
+            case 0: { // PLAY GAME
                 clear();
                 refresh();
                 flushinp();
@@ -33,7 +28,7 @@ int main() {
                 break;
             }
             default: {
-                // Opsi lain belum ada isinya
+                // CONTINUE / STORY & HIGH SCORE masih placeholder
                 clear();
                 attron(COLOR_PAIR(2) | A_BOLD);
                 mvprintw(12, 8, "Fitur ini masih dalam pengerjaan, sabar ya...");
