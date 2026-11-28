@@ -1,12 +1,17 @@
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <ncurses/curses.h>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
 #include "./head/game.h"
+#include "./head/audio.h"
 using namespace std;
 
-// BAGIAN WARNA 2048
+// Color Mapping untuk tile 2048
 int Game::getColorPair(int value) {
     switch (value) {
         case 0:    return 10;
@@ -37,12 +42,12 @@ int Game::getMaxTile() {
     return max_val;
 }
 
-// POSISI LOGIKA 
+// ============ LOGIKA BOARD 4x4 ============
 
 void Game::initBoard() {
     memset(board, 0, sizeof(board));
     score = 0;
-    best_score = 0;
+    best_score = 0; // Masih rekor per-sesi, belum nyambung ke file highscore
     move_count = 0;
     game_over = false;
     game_won = false;
@@ -100,9 +105,9 @@ bool Game::checkWin() {
     return false;
 }
 
-// POSISI GERAKAN BOARD 4x4
+// ============ GERAKAN TILE ============
 
-// Jujurly diriku kurang yakin, but somehow its works!:)
+// Slide & Merge per baris: padatkan -> gabung -> padatkan lagi
 bool Game::slideRowLeft(int row[SIZE]) {
     bool moved = false;
     int temp[SIZE] = {0};
@@ -195,13 +200,13 @@ void Game::processMove(bool moved) {
     }
 }
 
-// POSISI RENDERING BOARD 4x4
+// ============ RENDERING (UKURAN GRID 4x4 KOTAK SQUARE) ============
 
 void Game::drawCell(int row, int col, int cy, int cx, int cell_w, int cell_h) {
     int value = board[row][col];
     int color = getColorPair(value);
 
-    // warna dan cetak tebal
+    // Aktifkan warna dan cetak tebal (A_BOLD) untuk warna mencolok & kontras tinggi
     attron(COLOR_PAIR(color) | A_BOLD);
 
     // Warnai penuh seluruh area kotak (cell_w karakter x cell_h baris)
@@ -414,8 +419,10 @@ void Game::render() {
     refresh();
 }
 
-// Posisi Game Looping
+// Game Loop
 void Game::game() {
+    // Putar musik gameplay
+    playAudio("Musik/gameplay.wav");
     srand(time(NULL));
 
     initBoard();
@@ -473,6 +480,7 @@ void Game::game() {
 
         processMove(moved);
 
+        // Kalau langkah ini bikin buntu: pajang papan buntu sejenak, lalu balik menu
         if (game_over) {
             render();
             napms(500);
@@ -482,6 +490,7 @@ void Game::game() {
         }
     }
 
+    stopAudio();
     clear();
     refresh();
 }

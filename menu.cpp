@@ -2,9 +2,9 @@
 #include <cstring>
 #include <string>
 #include "./head/menu.h"
+#include "./head/audio.h"
 using namespace std;
 
-// Di deklarasi func nya kaga pake parameter ngapain dipanggil pake parameter?
 void MENU::initGame() {
     initscr();
     cbreak();
@@ -20,7 +20,7 @@ void MENU::initGame() {
     init_pair(5, COLOR_GREEN, COLOR_BLACK);
     init_pair(6, COLOR_RED, COLOR_BLACK);
 
-    // Color pairs untuk tile 2048 pake 8 warna standar biar aman di semua terminal
+    // Color pairs untuk tile 2048 (pakai 8 warna standar biar aman di semua terminal)
     init_pair(10, COLOR_WHITE, COLOR_BLACK);   // Kosong
     init_pair(11, COLOR_BLACK, COLOR_WHITE);   // 2: Putih
     init_pair(12, COLOR_BLACK, COLOR_CYAN);    // 4: Cyan
@@ -36,14 +36,13 @@ void MENU::initGame() {
     init_pair(22, COLOR_WHITE, COLOR_GREEN);   // >2048: Hijau Terang
 }
 
-// Judul Game 2048 di tengah layar
+// Judul Game 2048 (ditaruh di tengah layar)
 void MENU::tampilanJudul() {
     int max_x = getmaxx(stdscr);
     int cx = (max_x > 32) ? (max_x - 32) / 2 : 5;
     int awalX = 4;
 
     attron(COLOR_PAIR(1) | A_BOLD);
-    // ASCII Art nya lebih keren gini apa yang kemaren? :3
     mvprintw(awalX,     cx, "    ____    ___   _  _    ___  ");
     mvprintw(awalX + 1, cx, "   |___ \\  / _ \\ | || |  ( _ ) ");
     mvprintw(awalX + 2, cx, "     __) || | | || || |_ / _ \\ ");
@@ -109,7 +108,7 @@ void MENU::tampilanMenu(int pilihan) {
         }
     }
 
-    // Hint buat tombol navigasi
+    // Hint tombol navigasi
     attron(A_DIM);
     const char* hint = "Gunakan Panah / WASD  |  Enter: Pilih";
     int hint_x = (max_x > 36) ? (max_x - 36) / 2 : 22;
@@ -120,6 +119,8 @@ void MENU::tampilanMenu(int pilihan) {
 // Loop Utama Menu
 int MENU::menu() {
     nodelay(stdscr, FALSE);
+    // Putar musik lobby
+    playAudio("Musik/lobby.wav");
 
     int pilihan = 0;
     int ch;
@@ -140,6 +141,7 @@ int MENU::menu() {
             if (pilihan > 4) pilihan = 0;
         }
         else if (ch == 10 || ch == 13 || ch == KEY_ENTER || ch == '\n' || ch == '\r') {
+            stopAudio();
             flushinp();
             return pilihan;
         }
